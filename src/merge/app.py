@@ -55,7 +55,8 @@ def create_parser():
             'Filename for saving the sum'
             ' (default: "{basename}_sum_{start}_{stop}.tif")'))
     parser.add_argument(
-        '--quiet', '-q', action='count', default=0, help='Only print errors')
+        '--quiet', '-q', action='count', default=0, help=(
+            'Reduce verbosity (can be given multiple times)'))
     parser.add_argument(
         '--log', type=str, help='Write logs to a file with the given name')
 
