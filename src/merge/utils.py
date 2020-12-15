@@ -1,20 +1,30 @@
-from collections import defaultdict
+from collections import OrderedDict
 from pathlib import Path
 import re
 from skimage.io import imread, imsave
+
+
+def get_or_emplace(mapping, key, default):
+    value = mapping.get(key, None)
+    if value:
+        return value
+    else:
+        mapping[key] = default
+        return default
 
 
 def group_files(
         files,
         pattern=r"(?P<basename>.+)-(?P<index>[0-9]+)\.tif"):
     regex = re.compile(pattern)
-    ret = defaultdict(list)
+    ret = OrderedDict()
     for f in files:
         m = regex.match(Path(f).name)
         if m:
             key = m.group("basename")
             item = (int(m.group("index")), f)
-            ret[key].append(item)
+            items = get_or_emplace(ret, key, [])
+            items.append(item)
 
     return ret
 

@@ -49,6 +49,13 @@ def test_group_files():
     }
 
 
+def test_items_to_merge_order():
+    names = ["a", "b", "c", "d", "e"]
+    files = ["{}-0.tif".format(name) for name in names]
+    grouped = group_files(files)
+    assert list(grouped.keys()) == names
+
+
 def test_items_to_merge_missing():
     items = group_files(files)["a"]
     sliced, missing = items_to_merge(items)
