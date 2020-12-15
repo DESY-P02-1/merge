@@ -37,7 +37,10 @@ def create_parser():
             ' "(?P<basename>{basename}){sep}(?P<index>[0-9]+)\\.{ext}")'))
     parser.add_argument(
         '--slice', type=str, default=':',
-        help='Slice of the indices to merge (default: ":")')
+        help=(
+            'Slice of the indices to merge in Python-notation, i.e.,'
+            ' "start:stop:step", where the endpoint "stop" is *not* included'
+            ' (default: ":")'))
     parser.add_argument(
         '--exclude', '-e', type=str, default='',
         help='Comma-separated list of indices to exclude (default: "")')
