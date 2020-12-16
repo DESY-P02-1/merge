@@ -39,12 +39,14 @@ def get_range(first, last, slice):
 
 
 def items_to_merge(items, slice=slice(None), exclude=[]):
-    items = sorted(items)
+    # Only sort by index to not reorder files with duplicate index
+    items = sorted(items, key=lambda item: item[0])
     first_index = items[0][0]
     last_index = items[-1][0]
     indices = get_range(first_index, last_index, slice)
     sliced_items = []
     missing_indices = []
+    duplicated_indices = []
     pos = 0
     for i in indices:
         while pos < len(items) and items[pos][0] < i:
@@ -52,6 +54,12 @@ def items_to_merge(items, slice=slice(None), exclude=[]):
         if pos < len(items) and i == items[pos][0]:
             item = items[pos]
             pos += 1
+            if pos < len(items) and i == items[pos][0]:
+                # There is at least one duplicate for the current index.
+                # Additional duplicates of the current index will be skipped at
+                # the beginning of next iteration.
+                duplicated_indices.append(i)
+                pos += 1
         else:
             # index is missing in items
             item = None
@@ -62,7 +70,7 @@ def items_to_merge(items, slice=slice(None), exclude=[]):
             else:
                 missing_indices.append(i)
 
-    return sliced_items, missing_indices
+    return sliced_items, missing_indices, duplicated_indices
 
 
 def parse_slice(str):
