@@ -57,13 +57,39 @@ def create_parser():
         help=(
             'Filename for saving the sum'
             ' (default: "{basename}_sum_{start}_{stop}.tif")'))
+    parser.add_argument(
+        '--quiet', '-q', action='count', default=0, help=(
+            'Reduce verbosity (can be given multiple times)'))
+    parser.add_argument(
+        '--log', type=str, help='Write logs to a file with the given name')
 
     return parser
 
 
 def parse_config(args):
-    logging.basicConfig(
-        level=logging.INFO, format='%(levelname)-8s %(message)s')
+    if args.quiet == 0:
+        level = logging.INFO
+    elif args.quiet == 1:
+        level = logging.WARNING
+    else:
+        level = logging.ERROR
+
+    logger = logging.getLogger("merge")
+    logger.setLevel(logging.INFO)
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(level)
+    stream_formatter = logging.Formatter('%(levelname)-8s %(message)s')
+    stream_handler.setFormatter(stream_formatter)
+    logger.addHandler(stream_handler)
+
+    if args.log:
+        file_handler = logging.FileHandler(args.log)
+        file_handler.setLevel(logging.INFO)
+        file_formatter = logging.Formatter(
+            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(file_formatter)
+        logger.addHandler(file_handler)
 
     slice = parse_slice(args.slice)
     exclude = parse_exclude(args.exclude)
