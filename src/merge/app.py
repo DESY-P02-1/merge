@@ -152,12 +152,20 @@ def check_missing(missing_indices):
         log.warning("The following indices are missing: %s", missing_indices)
 
 
+def check_duplicates(duplicated_indices):
+    if duplicated_indices:
+        raise ValueError(
+            "There exist multiple files for the following indices: {}".format(
+                duplicated_indices))
+
+
 def merge_group(
         available_items, slice, exclude, basename=None, avg=None, sum=None):
-    items, missing = items_to_merge(available_items, slice, exclude)
+    items, missing, dups = items_to_merge(available_items, slice, exclude)
     start = check_start(items, slice, exclude)
     stop = check_stop(items, slice, exclude)
     check_missing(missing)
+    check_duplicates(dups)
     acc = Accumulator()
     merge_items(items, acc)
     if avg:

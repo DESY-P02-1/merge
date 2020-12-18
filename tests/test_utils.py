@@ -58,37 +58,54 @@ def test_items_to_merge_order():
 
 def test_items_to_merge_missing():
     items = group_files(files)["a"]
-    sliced, missing = items_to_merge(items)
+    sliced, missing, dups = items_to_merge(items)
     assert sliced == [(0, "a-0.tif"), (1, "a-1.tif"), (3, "a-3.tif")]
     assert missing == [2]
+    assert dups == []
+
+
+def test_items_to_merge_duplicates():
+    files_with_dups = files.copy()
+    files_with_dups.insert(0, "a-00.tif")
+    files_with_dups.append("a-01.tif")
+    files_with_dups.append("a-001.tif")
+    items = group_files(files_with_dups)["a"]
+    sliced, missing, dups = items_to_merge(items)
+    assert sliced == [(0, "a-00.tif"), (1, "a-1.tif"), (3, "a-3.tif")]
+    assert missing == [2]
+    assert dups == [0, 1]
 
 
 def test_items_to_merge_slice():
     items = group_files(files)["a"]
-    sliced, missing = items_to_merge(items, slice(1, 2))
+    sliced, missing, dups = items_to_merge(items, slice(1, 2))
     assert sliced == [(1, "a-1.tif")]
     assert missing == []
+    assert dups == []
 
 
 def test_items_to_merge_missing_front():
     items = group_files(files)["b"]
-    sliced, missing = items_to_merge(items)
+    sliced, missing, dups = items_to_merge(items)
     assert sliced == [(1, "b-1.tif"), (2, "b-2.tif")]
     assert missing == []
+    assert dups == []
 
 
 def test_items_to_merge_step():
     items = group_files(files)["a"]
-    sliced, missing = items_to_merge(items, slice(1, None, 2))
+    sliced, missing, dups = items_to_merge(items, slice(1, None, 2))
     assert sliced == [(1, "a-1.tif"), (3, "a-3.tif")]
     assert missing == []
+    assert dups == []
 
 
 def test_items_to_merge_exclude():
     items = group_files(files)["a"]
-    sliced, missing = items_to_merge(items, slice(1, 3), exclude=[2])
+    sliced, missing, dups = items_to_merge(items, slice(1, 3), exclude=[2])
     assert sliced == [(1, "a-1.tif")]
     assert missing == []
+    assert dups == []
 
 
 def test_save_load(tmp_path):

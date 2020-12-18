@@ -1,6 +1,7 @@
-from merge.app import create_parser, parse_config, main
+from merge.app import create_parser, parse_config, merge_group, main
 from merge.utils import load, save
 import numpy as np
+import pytest
 
 
 def test_parse_config_escape():
@@ -45,6 +46,12 @@ def test_parse_config_basename_and_all(caplog):
     assert config["pattern"] == expected
     assert len(caplog.records) == 1
     assert caplog.records[0].levelname == "WARNING"
+
+
+def test_merge_group_duplicates():
+    items = [(1, "a-1.tif"), (2, "a-2.tif"), (2, "a-02.tif")]
+    with pytest.raises(ValueError):
+        merge_group(items, slice(None), [])
 
 
 files = [
