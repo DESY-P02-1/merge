@@ -154,9 +154,9 @@ def check_missing(missing_indices):
 
 def check_duplicates(duplicated_indices):
     if duplicated_indices:
-        log.warning(
-            "There exist multiple files for the following indices: %s",
-            duplicated_indices)
+        raise ValueError(
+            "There exist multiple files for the following indices: {}".format(
+                duplicated_indices))
 
 
 def merge_group(
