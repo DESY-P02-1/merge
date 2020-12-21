@@ -31,10 +31,10 @@ def create_parser():
         help='Same as basename=".*" without escaping')
     parser.add_argument(
         '--pattern', type=str,
-        default=r'(?P<basename>{basename}){sep}(?P<index>[0-9]+)\.{ext}',
+        default=r'(?P<basename>{basename}){sep}(?P<index>[0-9]+)\.{ext}$',
         help=(
             'Full filename regex (default:'
-            ' "(?P<basename>{basename}){sep}(?P<index>[0-9]+)\\.{ext}")'))
+            ' "(?P<basename>{basename}){sep}(?P<index>[0-9]+)\\.{ext}$")'))
     parser.add_argument(
         '--slice', type=str, default=':',
         help=(
