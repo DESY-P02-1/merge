@@ -7,42 +7,42 @@ import pytest
 def test_parse_config_escape():
     args = create_parser().parse_args(["foo(bar)"])
     config = parse_config(args)
-    expected = r"(?P<basename>foo\(bar\))-(?P<index>[0-9]+)\.tif"
+    expected = r"(?P<basename>foo\(bar\))-(?P<index>[0-9]+)\.tif$"
     assert config["pattern"] == expected
 
 
 def test_parse_config_sep():
     args = create_parser().parse_args(["--sep", "_", "foo"])
     config = parse_config(args)
-    expected = r"(?P<basename>foo)_(?P<index>[0-9]+)\.tif"
+    expected = r"(?P<basename>foo)_(?P<index>[0-9]+)\.tif$"
     assert config["pattern"] == expected
 
 
 def test_parse_config_ext():
     args = create_parser().parse_args(["--ext", "cbf", "foo"])
     config = parse_config(args)
-    expected = r"(?P<basename>foo)-(?P<index>[0-9]+)\.cbf"
+    expected = r"(?P<basename>foo)-(?P<index>[0-9]+)\.cbf$"
     assert config["pattern"] == expected
 
 
 def test_parse_config_all():
     args = create_parser().parse_args(["--all"])
     config = parse_config(args)
-    expected = r"(?P<basename>.*)-(?P<index>[0-9]+)\.tif"
+    expected = r"(?P<basename>.*)-(?P<index>[0-9]+)\.tif$"
     assert config["pattern"] == expected
 
 
 def test_parse_config_multiple_basenames():
     args = create_parser().parse_args(["foo", "bar"])
     config = parse_config(args)
-    expected = r"(?P<basename>foo|bar)-(?P<index>[0-9]+)\.tif"
+    expected = r"(?P<basename>foo|bar)-(?P<index>[0-9]+)\.tif$"
     assert config["pattern"] == expected
 
 
 def test_parse_config_basename_and_all(caplog):
     args = create_parser().parse_args(["--all", "bar"])
     config = parse_config(args)
-    expected = r"(?P<basename>.*)-(?P<index>[0-9]+)\.tif"
+    expected = r"(?P<basename>.*)-(?P<index>[0-9]+)\.tif$"
     assert config["pattern"] == expected
     assert len(caplog.records) == 1
     assert caplog.records[0].levelname == "WARNING"
@@ -55,7 +55,8 @@ def test_merge_group_duplicates():
 
 
 files = [
-    "a-0.tif", "a-1.tif", "a-3.tif", "b-1.tif", "b-2.tif", "c_0.tif", "d-1.log"
+    "a-0.tif", "a-0.tif.metadata", "a-1.tif", "a-3.tif", "b-1.tif", "b-2.tif",
+    "c_0.tif", "d-1.log"
 ]
 
 
