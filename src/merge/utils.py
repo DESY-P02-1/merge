@@ -81,6 +81,7 @@ def parse_slice(str):
         start = None
     if stop:
         stop = int(stop)
+        stop += 1  # here, unlike Python, stop is included in the range
     else:
         stop = None
     if step:
