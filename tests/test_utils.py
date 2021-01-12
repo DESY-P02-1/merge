@@ -8,12 +8,12 @@ from merge.utils import (
     "str, expected", [
         (":", slice(None)),
         ("5:", slice(5, None)),
-        (":5", slice(None, 5)),
-        ("3:5", slice(3, 5)),
+        (":5", slice(None, 6)),
+        ("3:5", slice(3, 6)),
         ("::2", slice(None, None, 2)),
-        (":5:", slice(None, 5)),
+        (":5:", slice(None, 6)),
         ("5::", slice(5, None)),
-        ("1:3:5", slice(1, 3, 5))
+        ("1:3:5", slice(1, 4, 5))
     ])
 def test_parse_slice(str, expected):
     assert parse_slice(str) == expected

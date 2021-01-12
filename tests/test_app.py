@@ -79,14 +79,14 @@ def test_main(tmp_path):
         save(tmp_path / file, image)
 
     main([
-        "--all", "--slice", ":2", "--dir", str(tmp_path),
+        "--all", "--slice", ":1", "--dir", str(tmp_path),
         "--avg", str(tmp_path / "{basename}_avg_{start}_{stop}.tif"),
         "--sum", str(tmp_path / "{basename}_sum_{start}_{stop}.tif")])
 
-    avg_a = tmp_path / "a_avg_0_2.tif"
-    sum_a = tmp_path / "a_sum_0_2.tif"
-    avg_b = tmp_path / "b_avg_1_2.tif"
-    sum_b = tmp_path / "b_sum_1_2.tif"
+    avg_a = tmp_path / "a_avg_0_1.tif"
+    sum_a = tmp_path / "a_sum_0_1.tif"
+    avg_b = tmp_path / "b_avg_1_1.tif"
+    sum_b = tmp_path / "b_sum_1_1.tif"
 
     assert avg_a.is_file()
     assert sum_a.is_file()

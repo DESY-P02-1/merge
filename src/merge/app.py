@@ -38,8 +38,8 @@ def create_parser():
     parser.add_argument(
         '--slice', type=str, default=':',
         help=(
-            'Slice of the indices to merge in Python-notation, i.e.,'
-            ' "start:stop:step", where the endpoint "stop" is *not* included'
+            'Slice of the indices to merge, i.e., "start:stop:step", where,'
+            ' unlike Python, the endpoint "stop" *is* included'
             ' (default: ":")'))
     parser.add_argument(
         '--exclude', '-e', type=str, default='',
@@ -144,7 +144,7 @@ def check_stop(items, slice, exclude):
     last_index = items[-1][0]
     # It is normal Python behavior to silently accept too large endpoints
     log.info("Last index is %d", last_index)
-    return last_index + 1
+    return last_index
 
 
 def check_missing(missing_indices):
