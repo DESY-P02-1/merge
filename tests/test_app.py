@@ -108,3 +108,8 @@ def test_main(tmp_path):
     actual = load(sum_b)
     expected = np.mean(images["b"][:1], axis=0)
     assert np.allclose(actual, expected)
+
+
+def test_main_no_files(tmp_path, caplog):
+    main(["--dir", str(tmp_path), "empty"])
+    assert "No files matching" in caplog.text

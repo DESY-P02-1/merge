@@ -183,6 +183,8 @@ def merge(
         avg_pattern=None, sum_pattern=None):
     files = [file for file in Path(dir).iterdir() if file.is_file()]
     groups = group_files(files, pattern=pattern)
+    if not groups:
+        log.warning("No files matching '%s' found", pattern)
     for basename, available_items in sorted(groups.items()):
         log.info("Merging files for basename '%s'", basename)
         merge_group(
