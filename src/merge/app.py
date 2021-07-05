@@ -3,6 +3,7 @@
 """
 import sys
 import argparse
+import os
 from pathlib import Path
 import logging
 import re
@@ -47,6 +48,9 @@ def create_parser():
     parser.add_argument(
         '--dir', '-d', type=str, default='.',
         help='Root directory for data to load (default: ".")')
+    parser.add_argument(
+        '--output-dir', '-o', type=str, default='.',
+        help='Root directory where output files are written (default: ".")')
     parser.add_argument(
         '--avg', type=str, default='{basename}_avg_{start}_{stop}.tif',
         help=(
@@ -104,13 +108,16 @@ def parse_config(args):
     pattern = args.pattern.format(
         basename="|".join(basenames), sep=args.sep, ext=args.ext)
 
+    avg_pattern = os.path.join(args.output_dir, args.avg)
+    sum_pattern = os.path.join(args.output_dir, args.sum)
+
     return dict(
         pattern=pattern,
         dir=args.dir,
         slice=slice,
         exclude=exclude,
-        avg_pattern=args.avg,
-        sum_pattern=args.sum)
+        avg_pattern=avg_pattern,
+        sum_pattern=sum_pattern)
 
 
 def merge_items(items, accumulator):
@@ -178,9 +185,20 @@ def merge_group(
         save(sum, acc.sum())
 
 
+def create_output_dirs(avg_pattern, sum_pattern):
+    avg_parent = Path(avg_pattern).parent
+    sum_parent = Path(sum_pattern).parent
+    log.info("Creating output directory '%s'", avg_parent)
+    avg_parent.mkdir(parents=True, exist_ok=True)
+    if sum_parent != avg_parent:
+        log.info("Creating output directory '%s'", sum_parent)
+        sum_parent.mkdir(parents=True, exist_ok=True)
+
+
 def merge(
         pattern, dir=".", slice=slice(None), exclude=None,
         avg_pattern=None, sum_pattern=None):
+    create_output_dirs(avg_pattern, sum_pattern)
     files = [file for file in Path(dir).iterdir() if file.is_file()]
     groups = group_files(files, pattern=pattern)
     if not groups:

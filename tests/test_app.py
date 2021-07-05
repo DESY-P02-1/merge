@@ -60,7 +60,8 @@ files = [
 ]
 
 
-def test_main(tmp_path):
+@pytest.fixture
+def images(tmp_path):
     images = {}
     for file in files:
         key = file[0]
@@ -77,7 +78,10 @@ def test_main(tmp_path):
             images[key] = [image]
 
         save(tmp_path / file, image)
+    return images
 
+
+def test_main(tmp_path, images):
     main([
         "--all", "--slice", ":1", "--dir", str(tmp_path),
         "--avg", str(tmp_path / "{basename}_avg_{start}_{stop}.tif"),
@@ -113,3 +117,37 @@ def test_main(tmp_path):
 def test_main_no_files(tmp_path, caplog):
     main(["--dir", str(tmp_path), "empty"])
     assert "No files matching" in caplog.text
+
+
+def test_main_output_dir(tmp_path, images):
+    main([
+        "--all", "--slice", ":1", "--dir", str(tmp_path),
+        "--output-dir", str(tmp_path / "output_dir"),
+        "--avg", "{basename}_avg_{start}_{stop}.tif",
+        "--sum", "subdir/{basename}_sum_{start}_{stop}.tif"])
+
+    sum_a = tmp_path / "output_dir" / "subdir" / "a_sum_0_1.tif"
+    avg_b = tmp_path / "output_dir" / "b_avg_1_1.tif"
+    sum_b = tmp_path / "output_dir" / "subdir" / "b_sum_1_1.tif"
+    avg_a = tmp_path / "output_dir" / "a_avg_0_1.tif"
+
+    assert avg_a.is_file()
+    assert sum_a.is_file()
+    assert avg_b.is_file()
+    assert sum_b.is_file()
+
+    actual = load(avg_a)
+    expected = np.mean(images["a"][:2], axis=0)
+    assert np.allclose(actual, expected)
+
+    actual = load(sum_a)
+    expected = np.sum(images["a"][:2], axis=0)
+    assert np.allclose(actual, expected)
+
+    actual = load(avg_b)
+    expected = np.mean(images["b"][:1], axis=0)
+    assert np.allclose(actual, expected)
+
+    actual = load(sum_b)
+    expected = np.mean(images["b"][:1], axis=0)
+    assert np.allclose(actual, expected)
