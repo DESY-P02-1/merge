@@ -12,7 +12,7 @@ URL = 'https://github.com/DESY-P02-1/merge'
 EMAIL = 'tim.schoof@desy.de'
 AUTHOR = 'Tim Schoof'
 REQUIRES_PYTHON = '>=3.5.0'
-VERSION = '0.0.1-pre'
+VERSION = None  # Will be read from the __version__.py file
 
 # What packages are required for this module to be executed?
 REQUIRED = [
@@ -43,7 +43,7 @@ except FileNotFoundError:
 # Load the package's __version__.py module as a dictionary.
 about = {}
 if not VERSION:
-    with open(os.path.join(here, NAME, '__version__.py')) as f:
+    with open(os.path.join(here, "src", NAME, '__version__.py')) as f:
         exec(f.read(), about)
 else:
     about['__version__'] = VERSION
