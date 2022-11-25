@@ -1,6 +1,6 @@
 # merge
 
-[![Build Status](https://travis-ci.com/john/merge.svg?branch=master)](https://travis-ci.com/john/merge)
+![Build Status](https://github.com/DESY-P02-1/merge/actions/workflows/ci.yml/badge.svg?branch=master)
 
 merge calculates reduced statistics over multiple images
 
