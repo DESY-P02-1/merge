@@ -55,8 +55,14 @@ def test_merge_group_duplicates():
 
 
 files = [
-    "a-0.tif", "a-0.tif.metadata", "a-1.tif", "a-3.tif", "b-1.tif", "b-2.tif",
-    "c_0.tif", "d-1.log"
+    "a-0.tif",
+    "a-0.tif.metadata",
+    "a-1.tif",
+    "a-3.tif",
+    "b-1.tif",
+    "b-2.tif",
+    "c_0.tif",
+    "d-1.log",
 ]
 
 
@@ -82,10 +88,19 @@ def images(tmp_path):
 
 
 def test_main(tmp_path, images):
-    main([
-        "--all", "--slice", ":1", "--dir", str(tmp_path),
-        "--avg", str(tmp_path / "{basename}_avg_{start}_{stop}.tif"),
-        "--sum", str(tmp_path / "{basename}_sum_{start}_{stop}.tif")])
+    main(
+        [
+            "--all",
+            "--slice",
+            ":1",
+            "--dir",
+            str(tmp_path),
+            "--avg",
+            str(tmp_path / "{basename}_avg_{start}_{stop}.tif"),
+            "--sum",
+            str(tmp_path / "{basename}_sum_{start}_{stop}.tif"),
+        ]
+    )
 
     avg_a = tmp_path / "a_avg_0_1.tif"
     sum_a = tmp_path / "a_sum_0_1.tif"
@@ -120,11 +135,21 @@ def test_main_no_files(tmp_path, caplog):
 
 
 def test_main_output_dir(tmp_path, images):
-    main([
-        "--all", "--slice", ":1", "--dir", str(tmp_path),
-        "--output-dir", str(tmp_path / "output_dir"),
-        "--avg", "{basename}_avg_{start}_{stop}.tif",
-        "--sum", "subdir/{basename}_sum_{start}_{stop}.tif"])
+    main(
+        [
+            "--all",
+            "--slice",
+            ":1",
+            "--dir",
+            str(tmp_path),
+            "--output-dir",
+            str(tmp_path / "output_dir"),
+            "--avg",
+            "{basename}_avg_{start}_{stop}.tif",
+            "--sum",
+            "subdir/{basename}_sum_{start}_{stop}.tif",
+        ]
+    )
 
     sum_a = tmp_path / "output_dir" / "subdir" / "a_sum_0_1.tif"
     avg_b = tmp_path / "output_dir" / "b_avg_1_1.tif"
