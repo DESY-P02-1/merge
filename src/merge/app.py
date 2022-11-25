@@ -21,6 +21,17 @@ from merge.utils import (
 log = logging.getLogger(__name__)
 
 
+# These defaults apply only without --verbatim and therefore cannot be set as an
+# option in add_argument
+SEP_DEFAULT = "-"
+EXT_DEFAULT = "tif"
+PATTERN_DEFAULT = r"(?P<basename>{basename}){sep}(?P<index>[0-9]+)\.{ext}$"
+SLICE_DEFAULT = ":"
+EXCLUDE_DEFAULT = ""
+AVG_DEFAULT = "{basename}_avg_{start}_{stop}.tif"
+SUM_DEFAULT = "{basename}_sum_{start}_{stop}.tif"
+
+
 def create_parser():
     parser = argparse.ArgumentParser(
         description="Calculate reduced statistics over multiple images."
@@ -29,13 +40,23 @@ def create_parser():
         "basename", type=str, nargs="*", help="Basename part of filenames to merge."
     )
     parser.add_argument(
-        "--sep",
-        type=str,
-        default="-",
-        help='Separator between basename and index (default: "-")',
+        "--verbatim",
+        action="store_true",
+        help=(
+            "Treat basenames as a verbatim list of files to merge, ignoring their"
+            " indices and all other files in --dir. The names of the output files"
+            " must be explicitly set via --avg and/or --sum"
+        ),
     )
     parser.add_argument(
-        "--ext", type=str, default="tif", help='Filename extension (default: "tif")'
+        "--sep",
+        type=str,
+        help=f"Separator between basename and index (default: '{SEP_DEFAULT}')",
+    )
+    parser.add_argument(
+        "--ext",
+        type=str,
+        help=f"Filename extension (default: '{EXT_DEFAULT}')",
     )
     parser.add_argument(
         "--all", action="store_true", help='Same as basename=".*" without escaping'
@@ -43,28 +64,25 @@ def create_parser():
     parser.add_argument(
         "--pattern",
         type=str,
-        default=r"(?P<basename>{basename}){sep}(?P<index>[0-9]+)\.{ext}$",
-        help=(
-            "Full filename regex (default:"
-            ' "(?P<basename>{basename}){sep}(?P<index>[0-9]+)\\.{ext}$")'
-        ),
+        help=("Full filename regex (default: '{PATTERN_DEFAULT}')"),
     )
     parser.add_argument(
         "--slice",
         type=str,
-        default=":",
         help=(
-            'Slice of the indices to merge, i.e., "start:stop:step", where,'
-            ' unlike Python, the endpoint "stop" *is* included'
-            ' (default: ":")'
+            "Slice of the indices to merge, i.e., 'start:stop:step', where,"
+            " unlike Python, the endpoint 'stop' *is* included"
+            f" (default: '{SLICE_DEFAULT}')"
         ),
     )
     parser.add_argument(
         "--exclude",
         "-e",
         type=str,
-        default="",
-        help='Comma-separated list of indices to exclude (default: "")',
+        help=(
+            "Comma-separated list of indices to exclude"
+            f" (default: '{EXCLUDE_DEFAULT}')"
+        ),
     )
     parser.add_argument(
         "--dir",
@@ -83,20 +101,12 @@ def create_parser():
     parser.add_argument(
         "--avg",
         type=str,
-        default="{basename}_avg_{start}_{stop}.tif",
-        help=(
-            "Filename for saving the average"
-            ' (default: "{basename}_avg_{start}_{stop}.tif")'
-        ),
+        help=f"Filename for saving the average (default: '{AVG_DEFAULT}')",
     )
     parser.add_argument(
         "--sum",
         type=str,
-        default="{basename}_sum_{start}_{stop}.tif",
-        help=(
-            "Filename for saving the sum"
-            ' (default: "{basename}_sum_{start}_{stop}.tif")'
-        ),
+        help=f"Filename for saving the sum (default: '{SUM_DEFAULT}')",
     )
     parser.add_argument(
         "--quiet",
@@ -112,7 +122,7 @@ def create_parser():
     return parser
 
 
-def parse_config(args):
+def setup_logging(args):
     if args.quiet == 0:
         level = logging.INFO
     elif args.quiet == 1:
@@ -138,8 +148,51 @@ def parse_config(args):
         file_handler.setFormatter(file_formatter)
         logger.addHandler(file_handler)
 
-    slice = parse_slice(args.slice)
-    exclude = parse_exclude(args.exclude)
+
+def parse_config_verbatim(args):
+    assert args.verbatim
+    setup_logging(args)
+
+    if args.sep:
+        log.warning("Ignoring --sep because --verbatim is given")
+    if args.ext:
+        log.warning("Ignoring --ext because --verbatim is given")
+    if args.all:
+        log.warning("Ignoring --all because --verbatim is given")
+    if args.pattern:
+        log.warning("Ignoring --pattern because --verbatim is given")
+    if args.slice:
+        log.warning("Ignoring --slice because --verbatim is given")
+    if args.exclude:
+        log.warning("Ignoring --exclude because --verbatim is given")
+
+    filenames = [os.path.join(args.dir, filename) for filename in args.basename]
+
+    if len(filenames) < 2:
+        raise ValueError("With --verbatim, at least 2 filenames must be given")
+
+    avg_filename = None
+    sum_filename = None
+    if args.avg:
+        avg_filename = os.path.join(args.output_dir, args.avg)
+    if args.sum:
+        sum_filename = os.path.join(args.output_dir, args.sum)
+    if avg_filename is None and sum_filename is None:
+        raise ValueError(
+            "With --verbatim, output filenames must be set via --avg and/or --sum"
+        )
+
+    return dict(
+        filenames=filenames,
+        avg_filename=avg_filename,
+        sum_filename=sum_filename,
+    )
+
+
+def parse_config(args):
+    setup_logging(args)
+    slice = parse_slice(args.slice or SLICE_DEFAULT)
+    exclude = parse_exclude(args.exclude or EXCLUDE_DEFAULT)
     if args.all:
         if args.basename:
             log.warning("Ignoring positional arguments because --all is given")
@@ -148,12 +201,15 @@ def parse_config(args):
         basenames = [re.escape(basename) for basename in args.basename]
     if not basenames:
         raise ValueError("Neither basename nor --all given")
-    pattern = args.pattern.format(
-        basename="|".join(basenames), sep=args.sep, ext=args.ext
+    pattern = args.pattern or PATTERN_DEFAULT
+    pattern = pattern.format(
+        basename="|".join(basenames),
+        sep=args.sep or SEP_DEFAULT,
+        ext=args.ext or EXT_DEFAULT,
     )
 
-    avg_pattern = os.path.join(args.output_dir, args.avg)
-    sum_pattern = os.path.join(args.output_dir, args.sum)
+    avg_pattern = os.path.join(args.output_dir, args.avg or AVG_DEFAULT)
+    sum_pattern = os.path.join(args.output_dir, args.sum or SUM_DEFAULT)
 
     return dict(
         pattern=pattern,
@@ -268,17 +324,42 @@ def merge(
         )
 
 
+def merge_verbatim(filenames, avg_filename, sum_filename):
+    acc = Accumulator()
+    merge_items(enumerate(filenames), acc)
+    if avg_filename:
+        log.info("Saving average to '%s'", avg_filename)
+        save(avg_filename, acc.avg())
+    if sum_filename:
+        log.info("Saving sum to '%s'", sum_filename)
+        save(sum_filename, acc.sum())
+
+
 def main(argv=sys.argv[1:]):
     parser = create_parser()
     args = parser.parse_args(argv)
-    try:
-        config = parse_config(args)
-    except ValueError:
-        parser.print_usage()
-        exit(1)
 
-    log.debug("Using pattern '%s'", config["pattern"])
-    merge(**config)
+    if args.verbatim:
+        try:
+            config = parse_config_verbatim(args)
+        except ValueError as err:
+            log.error(err)
+            parser.print_usage()
+            exit(1)
+    else:
+        try:
+            config = parse_config(args)
+        except ValueError as err:
+            log.error(err)
+            parser.print_usage()
+            exit(1)
+
+    if args.verbatim:
+        log.debug("Merging files '%s'", config["filenames"])
+        merge_verbatim(**config)
+    else:
+        log.debug("Using pattern '%s'", config["pattern"])
+        merge(**config)
 
     return 0
 
