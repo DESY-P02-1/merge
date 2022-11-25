@@ -1,11 +1,11 @@
 import numpy as np
 import pytest
-from merge.utils import (
-    parse_slice, get_range, group_files, items_to_merge, save, load)
+from merge.utils import parse_slice, get_range, group_files, items_to_merge, save, load
 
 
 @pytest.mark.parametrize(
-    "str, expected", [
+    "str, expected",
+    [
         (":", slice(None)),
         ("5:", slice(5, None)),
         (":5", slice(None, 6)),
@@ -13,19 +13,22 @@ from merge.utils import (
         ("::2", slice(None, None, 2)),
         (":5:", slice(None, 6)),
         ("5::", slice(5, None)),
-        ("1:3:5", slice(1, 4, 5))
-    ])
+        ("1:3:5", slice(1, 4, 5)),
+    ],
+)
 def test_parse_slice(str, expected):
     assert parse_slice(str) == expected
 
 
 @pytest.mark.parametrize(
-    "first, last, s, expected", [
+    "first, last, s, expected",
+    [
         (1, 9, slice(3, 7), range(3, 7)),
         (4, 9, slice(3, 7), range(4, 7)),
         (1, 5, slice(3, 7), range(3, 6)),
-        (4, 5, slice(3, 7), range(4, 6))
-    ])
+        (4, 5, slice(3, 7), range(4, 6)),
+    ],
+)
 def test_get_range(first, last, s, expected):
     r = get_range(first, last, s)
     assert r == expected
@@ -36,16 +39,14 @@ def test_get_range_negative_step():
         get_range(1, 4, slice(3, 1, -1))
 
 
-files = [
-    "a-0.tif", "a-1.tif", "a-3.tif", "b-1.tif", "b-2.tif", "c_0.tif", "d-1.log"
-]
+files = ["a-0.tif", "a-1.tif", "a-3.tif", "b-1.tif", "b-2.tif", "c_0.tif", "d-1.log"]
 
 
 def test_group_files():
     grouped = group_files(files)
     assert grouped == {
         "a": [(0, "a-0.tif"), (1, "a-1.tif"), (3, "a-3.tif")],
-        "b": [(1, "b-1.tif"), (2, "b-2.tif")]
+        "b": [(1, "b-1.tif"), (2, "b-2.tif")],
     }
 
 

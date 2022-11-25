@@ -21,10 +21,13 @@ def test_one(value):
 
 
 @pytest.mark.parametrize(
-    "values", [
+    "values",
+    [
         np.random.randn(10),
         np.random.randn(10, 20),
-        np.random.randn(10, 20, 30)])
+        np.random.randn(10, 20, 30),
+    ],
+)
 def test_many(values):
     acc = Accumulator()
     for i in range(values.shape[0]):

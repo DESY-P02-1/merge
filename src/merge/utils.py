@@ -13,9 +13,7 @@ def get_or_emplace(mapping, key, default):
         return default
 
 
-def group_files(
-        files,
-        pattern=r"(?P<basename>.+)-(?P<index>[0-9]+)\.tif"):
+def group_files(files, pattern=r"(?P<basename>.+)-(?P<index>[0-9]+)\.tif"):
     regex = re.compile(pattern)
     ret = OrderedDict()
     for f in files:

@@ -16,8 +16,7 @@ class Accumulator:
     def __call__(self, value):
         if self._count == 0:
             try:
-                self._sum = np.zeros_like(
-                    value, dtype=promote_dtype(value.dtype))
+                self._sum = np.zeros_like(value, dtype=promote_dtype(value.dtype))
             except AttributeError:
                 # value doesn't have a dtype attribute,
                 # therefore no promotion can be done

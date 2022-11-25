@@ -9,7 +9,13 @@ import logging
 import re
 from merge.accumulate import Accumulator
 from merge.utils import (
-    parse_slice, parse_exclude, group_files, items_to_merge, load, save)
+    parse_slice,
+    parse_exclude,
+    group_files,
+    items_to_merge,
+    load,
+    save,
+)
 
 
 log = logging.getLogger(__name__)
@@ -17,55 +23,91 @@ log = logging.getLogger(__name__)
 
 def create_parser():
     parser = argparse.ArgumentParser(
-        description='Calculate reduced statistics over multiple images.')
+        description="Calculate reduced statistics over multiple images."
+    )
     parser.add_argument(
-        'basename', type=str, nargs='*',
-        help='Basename part of filenames to merge.')
+        "basename", type=str, nargs="*", help="Basename part of filenames to merge."
+    )
     parser.add_argument(
-        '--sep', type=str, default='-',
-        help='Separator between basename and index (default: "-")')
+        "--sep",
+        type=str,
+        default="-",
+        help='Separator between basename and index (default: "-")',
+    )
     parser.add_argument(
-        '--ext', type=str, default='tif',
-        help='Filename extension (default: "tif")')
+        "--ext", type=str, default="tif", help='Filename extension (default: "tif")'
+    )
     parser.add_argument(
-        '--all', action='store_true',
-        help='Same as basename=".*" without escaping')
+        "--all", action="store_true", help='Same as basename=".*" without escaping'
+    )
     parser.add_argument(
-        '--pattern', type=str,
-        default=r'(?P<basename>{basename}){sep}(?P<index>[0-9]+)\.{ext}$',
+        "--pattern",
+        type=str,
+        default=r"(?P<basename>{basename}){sep}(?P<index>[0-9]+)\.{ext}$",
         help=(
-            'Full filename regex (default:'
-            ' "(?P<basename>{basename}){sep}(?P<index>[0-9]+)\\.{ext}$")'))
+            "Full filename regex (default:"
+            ' "(?P<basename>{basename}){sep}(?P<index>[0-9]+)\\.{ext}$")'
+        ),
+    )
     parser.add_argument(
-        '--slice', type=str, default=':',
+        "--slice",
+        type=str,
+        default=":",
         help=(
             'Slice of the indices to merge, i.e., "start:stop:step", where,'
             ' unlike Python, the endpoint "stop" *is* included'
-            ' (default: ":")'))
+            ' (default: ":")'
+        ),
+    )
     parser.add_argument(
-        '--exclude', '-e', type=str, default='',
-        help='Comma-separated list of indices to exclude (default: "")')
+        "--exclude",
+        "-e",
+        type=str,
+        default="",
+        help='Comma-separated list of indices to exclude (default: "")',
+    )
     parser.add_argument(
-        '--dir', '-d', type=str, default='.',
-        help='Root directory for data to load (default: ".")')
+        "--dir",
+        "-d",
+        type=str,
+        default=".",
+        help='Root directory for data to load (default: ".")',
+    )
     parser.add_argument(
-        '--output-dir', '-o', type=str, default='.',
-        help='Root directory where output files are written (default: ".")')
+        "--output-dir",
+        "-o",
+        type=str,
+        default=".",
+        help='Root directory where output files are written (default: ".")',
+    )
     parser.add_argument(
-        '--avg', type=str, default='{basename}_avg_{start}_{stop}.tif',
+        "--avg",
+        type=str,
+        default="{basename}_avg_{start}_{stop}.tif",
         help=(
-            'Filename for saving the average'
-            ' (default: "{basename}_avg_{start}_{stop}.tif")'))
+            "Filename for saving the average"
+            ' (default: "{basename}_avg_{start}_{stop}.tif")'
+        ),
+    )
     parser.add_argument(
-        '--sum', type=str, default='{basename}_sum_{start}_{stop}.tif',
+        "--sum",
+        type=str,
+        default="{basename}_sum_{start}_{stop}.tif",
         help=(
-            'Filename for saving the sum'
-            ' (default: "{basename}_sum_{start}_{stop}.tif")'))
+            "Filename for saving the sum"
+            ' (default: "{basename}_sum_{start}_{stop}.tif")'
+        ),
+    )
     parser.add_argument(
-        '--quiet', '-q', action='count', default=0, help=(
-            'Reduce verbosity (can be given multiple times)'))
+        "--quiet",
+        "-q",
+        action="count",
+        default=0,
+        help=("Reduce verbosity (can be given multiple times)"),
+    )
     parser.add_argument(
-        '--log', type=str, help='Write logs to a file with the given name')
+        "--log", type=str, help="Write logs to a file with the given name"
+    )
 
     return parser
 
@@ -83,7 +125,7 @@ def parse_config(args):
 
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(level)
-    stream_formatter = logging.Formatter('%(levelname)-8s %(message)s')
+    stream_formatter = logging.Formatter("%(levelname)-8s %(message)s")
     stream_handler.setFormatter(stream_formatter)
     logger.addHandler(stream_handler)
 
@@ -91,7 +133,8 @@ def parse_config(args):
         file_handler = logging.FileHandler(args.log)
         file_handler.setLevel(logging.INFO)
         file_formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
         file_handler.setFormatter(file_formatter)
         logger.addHandler(file_handler)
 
@@ -106,7 +149,8 @@ def parse_config(args):
     if not basenames:
         raise ValueError("Neither basename nor --all given")
     pattern = args.pattern.format(
-        basename="|".join(basenames), sep=args.sep, ext=args.ext)
+        basename="|".join(basenames), sep=args.sep, ext=args.ext
+    )
 
     avg_pattern = os.path.join(args.output_dir, args.avg)
     sum_pattern = os.path.join(args.output_dir, args.sum)
@@ -117,7 +161,8 @@ def parse_config(args):
         slice=slice,
         exclude=exclude,
         avg_pattern=avg_pattern,
-        sum_pattern=sum_pattern)
+        sum_pattern=sum_pattern,
+    )
 
 
 def merge_items(items, accumulator):
@@ -140,7 +185,9 @@ def check_start(items, slice, exclude):
             if i not in exclude:
                 log.warning(
                     "Starting at index %d although index %d was requested",
-                    first_index, i)
+                    first_index,
+                    i,
+                )
                 return first_index
 
     log.info("Starting at index %d", first_index)
@@ -163,11 +210,12 @@ def check_duplicates(duplicated_indices):
     if duplicated_indices:
         raise ValueError(
             "There exist multiple files for the following indices: {}".format(
-                duplicated_indices))
+                duplicated_indices
+            )
+        )
 
 
-def merge_group(
-        available_items, slice, exclude, basename=None, avg=None, sum=None):
+def merge_group(available_items, slice, exclude, basename=None, avg=None, sum=None):
     items, missing, dups = items_to_merge(available_items, slice, exclude)
     start = check_start(items, slice, exclude)
     stop = check_stop(items, slice, exclude)
@@ -196,8 +244,13 @@ def create_output_dirs(avg_pattern, sum_pattern):
 
 
 def merge(
-        pattern, dir=".", slice=slice(None), exclude=None,
-        avg_pattern=None, sum_pattern=None):
+    pattern,
+    dir=".",
+    slice=slice(None),
+    exclude=None,
+    avg_pattern=None,
+    sum_pattern=None,
+):
     create_output_dirs(avg_pattern, sum_pattern)
     files = [file for file in Path(dir).iterdir() if file.is_file()]
     groups = group_files(files, pattern=pattern)
@@ -206,8 +259,13 @@ def merge(
     for basename, available_items in sorted(groups.items()):
         log.info("Merging files for basename '%s'", basename)
         merge_group(
-            available_items, slice=slice, exclude=exclude, basename=basename,
-            avg=avg_pattern, sum=sum_pattern)
+            available_items,
+            slice=slice,
+            exclude=exclude,
+            basename=basename,
+            avg=avg_pattern,
+            sum=sum_pattern,
+        )
 
 
 def main(argv=sys.argv[1:]):
