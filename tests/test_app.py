@@ -1,3 +1,4 @@
+import logging
 from merge.app import create_parser, parse_config, merge_group, main
 from merge.utils import load, save
 import numpy as np
@@ -134,7 +135,8 @@ def test_main_no_files(tmp_path, caplog):
     assert "No files matching" in caplog.text
 
 
-def test_main_output_dir(tmp_path, images):
+def test_main_output_dir(tmp_path, images, caplog):
+    caplog.set_level(logging.WARNING)
     main(
         [
             "--all",
@@ -174,5 +176,43 @@ def test_main_output_dir(tmp_path, images):
     assert np.allclose(actual, expected)
 
     actual = load(sum_b)
-    expected = np.mean(images["b"][:1], axis=0)
+    expected = np.sum(images["b"][:1], axis=0)
     assert np.allclose(actual, expected)
+
+    assert not caplog.records
+
+
+def test_main_check_start(tmp_path, images, caplog):
+    """A warning is printed if the requested start index is lower than the
+    lowest available index"""
+    caplog.set_level(logging.WARNING)
+    main(
+        [
+            "--slice",
+            "0:3",
+            "--dir",
+            str(tmp_path),
+            "--avg",
+            str(tmp_path / "{basename}_avg_{start}_{stop}.tif"),
+            "--sum",
+            str(tmp_path / "{basename}_sum_{start}_{stop}.tif"),
+            "b",
+        ]
+    )
+
+    avg_b = tmp_path / "b_avg_1_2.tif"
+    sum_b = tmp_path / "b_sum_1_2.tif"
+
+    assert avg_b.is_file()
+    assert sum_b.is_file()
+
+    actual = load(avg_b)
+    expected = np.mean(images["b"][:], axis=0)
+    assert np.allclose(actual, expected)
+
+    actual = load(sum_b)
+    expected = np.sum(images["b"][:], axis=0)
+    assert np.allclose(actual, expected)
+
+    assert len(caplog.records) == 1
+    assert "Starting at index 1" in caplog.records[0].message

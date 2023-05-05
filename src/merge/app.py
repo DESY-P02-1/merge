@@ -180,7 +180,7 @@ def merge_items(items, accumulator):
 def check_start(items, slice, exclude):
     first_index = items[0][0]
     if slice.start is not None:
-        missing = range(first_index, slice.start)
+        missing = range(slice.start, first_index)
         for i in missing:
             if i not in exclude:
                 log.warning(
