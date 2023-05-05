@@ -176,3 +176,36 @@ def test_main_output_dir(tmp_path, images):
     actual = load(sum_b)
     expected = np.mean(images["b"][:1], axis=0)
     assert np.allclose(actual, expected)
+
+
+def test_main_verbatim(tmp_path, images):
+    avg_filename = tmp_path / "avg_verbatim.tif"
+    sum_filename = tmp_path / "sum_verbatim.tif"
+
+    main(
+        [
+            "--verbatim",
+            "a-1.tif",
+            "b-1.tif",
+            "--dir",
+            str(tmp_path),
+            "--avg",
+            str(avg_filename),
+            "--sum",
+            str(sum_filename),
+        ]
+    )
+
+    assert avg_filename.is_file()
+    assert sum_filename.is_file()
+
+    # b-1.tif is first image in list "b" because b-0.tif is missing
+    merged_images = [images["a"][1], images["b"][0]]
+
+    actual = load(avg_filename)
+    expected = np.mean(merged_images, axis=0)
+    assert np.allclose(actual, expected)
+
+    actual = load(sum_filename)
+    expected = np.sum(merged_images, axis=0)
+    assert np.allclose(actual, expected)
