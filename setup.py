@@ -11,7 +11,7 @@ DESCRIPTION = "Calculate reduced statistics over multiple images"
 URL = "https://github.com/DESY-P02-1/merge"
 EMAIL = "tim.schoof@desy.de"
 AUTHOR = "Tim Schoof"
-REQUIRES_PYTHON = ">=3.5.0"
+REQUIRES_PYTHON = ">=3.6.0"
 VERSION = None  # Will be read from the __version__.py file
 
 # What packages are required for this module to be executed?
@@ -73,7 +73,11 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: Implementation :: CPython",
         "Development Status :: 3 - Alpha",
     ],
